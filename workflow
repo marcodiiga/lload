@@ -228,3 +228,5 @@ ParseTopLevelDecl {
  	clang.exe!clang::ParseAST(clang::Sema & S, bool PrintStats, bool SkipFunctionBodies) Line 144	C++
 
 to the source location taken in consideration.
+
+Also: constexpr stuff is resolved in AST::ExprConstant, static Evaluate();
