@@ -118,3 +118,113 @@ void ASTFrontendAction::ExecuteAction() {
   ParseAST(CI.getSema(), CI.getFrontendOpts().ShowStats,
            CI.getFrontendOpts().SkipFunctionBodies);
 }
+
+
+
+ParseTopLevelDecl {
+  /// ParseExternalDeclaration:
+  ///
+  ///       external-declaration: [C99 6.9], declaration: [C++ dcl.dcl]
+  ///         function-definition
+  ///         declaration
+  /// [GNU]   asm-definition
+  /// [GNU]   __extension__ external-declaration
+  /// [OBJC]  objc-class-definition
+  /// [OBJC]  objc-class-declaration
+  /// [OBJC]  objc-alias-declaration
+  /// [OBJC]  objc-protocol-definition
+  /// [OBJC]  objc-method-definition
+  /// [OBJC]  @end
+  /// [C++]   linkage-specification
+  /// [GNU] asm-definition:
+  ///         simple-asm-expr ';'
+  /// [C++11] empty-declaration
+  /// [C++11] attribute-declaration
+  ///
+  /// [C++11] empty-declaration:
+  ///           ';'
+  ///
+  /// [C++0x/GNU] 'extern' 'template' declaration
+  Parser::DeclGroupPtrTy Parser::ParseExternalDeclaration()
+    // We can't tell whether this is a function-definition or declaration yet.
+    might call ParseDeclarationOrFunctionDefinition() {
+      /// ParseDeclarationOrFunctionDefinition - Parse either a function-definition or
+      /// a declaration.  We can't tell which we have until we read up to the
+      /// compound-statement in function-definition. TemplateParams, if
+      /// non-NULL, provides the template parameters when we're parsing a
+      /// C++ template-declaration.
+      ///
+      ///       function-definition: [C99 6.9.1]
+      ///         decl-specs      declarator declaration-list[opt] compound-statement
+      /// [C90] function-definition: [C99 6.7.1] - implicit int result
+      /// [C90]   decl-specs[opt] declarator declaration-list[opt] compound-statement
+      ///
+      ///       declaration: [C99 6.7]
+      ///         declaration-specifiers init-declarator-list[opt] ';'
+      /// [!C99]  init-declarator-list ';'                   [TODO: warn in c99 mode]
+      /// [OMP]   threadprivate-directive                              [TODO]
+      ///
+      Parser::DeclGroupPtrTy
+      Parser::ParseDeclOrFunctionDefInternal {
+        /// ParseDeclarationSpecifiers
+        ///       declaration-specifiers: [C99 6.7]
+        ///         storage-class-specifier declaration-specifiers[opt]
+        ///         type-specifier declaration-specifiers[opt]
+        /// [C99]   function-specifier declaration-specifiers[opt]
+        /// [C11]   alignment-specifier declaration-specifiers[opt]
+        /// [GNU]   attributes declaration-specifiers[opt]
+        /// [Clang] '__module_private__' declaration-specifiers[opt]
+        ///
+        ///       storage-class-specifier: [C99 6.7.1]
+        ///         'typedef'
+        ///         'extern'
+        ///         'static'
+        ///         'auto'
+        ///         'register'
+        /// [C++]   'mutable'
+        /// [C++11] 'thread_local'
+        /// [C11]   '_Thread_local'
+        /// [GNU]   '__thread'
+        ///       function-specifier: [C99 6.7.4]
+        /// [C99]   'inline'
+        /// [C++]   'virtual'
+        /// [C++]   'explicit'
+        /// [OpenCL] '__kernel'
+        ///       'friend': [C++ dcl.friend]
+        ///       'constexpr': [C++0x dcl.constexpr]
+
+        ///
+        void Parser::ParseDeclarationSpecifiers {
+          (every one of these calls void Preprocessor::Lex(Token &Result))
+          Notice: EVERY Loc (i.e. SourceLocation) locates a token/whatever by doing (FileID + real_file_offset). The SourceManager
+          is needed to understand this location.
+        }
+      }
+    }
+      
+}
+
+-> first need a way to map every path in a hierarchy like this
+
+  clang.exe!FinishOverloadedCallExpr(clang::Sema & SemaRef, clang::Scope * S, clang::Expr * Fn, clang::UnresolvedLookupExpr * ULE, clang::SourceLocation LParenLoc, llvm::MutableArrayRef<clang::Expr *> Args, clang::SourceLocation RParenLoc, clang::Expr * ExecConfig, clang::OverloadCandidateSet * CandidateSet, clang::OverloadCandidate * * Best, clang::OverloadingResult OverloadResult, bool AllowTypoCorrection) Line 10813	C++
+  clang.exe!clang::Sema::BuildOverloadedCallExpr(clang::Scope * S, clang::Expr * Fn, clang::UnresolvedLookupExpr * ULE, clang::SourceLocation LParenLoc, llvm::MutableArrayRef<clang::Expr *> Args, clang::SourceLocation RParenLoc, clang::Expr * ExecConfig, bool AllowTypoCorrection) Line 10873	C++
+ 	clang.exe!clang::Sema::ActOnCallExpr(clang::Scope * S, clang::Expr * Fn, clang::SourceLocation LParenLoc, llvm::MutableArrayRef<clang::Expr *> ArgExprs, clang::SourceLocation RParenLoc, clang::Expr * ExecConfig, bool IsExecConfig) Line 4693	C++
+ 	clang.exe!clang::Parser::ParsePostfixExpressionSuffix(clang::ActionResult<clang::Expr *,1> LHS) Line 1481	C++
+ 	clang.exe!clang::Parser::ParseCastExpression(bool isUnaryExpression, bool isAddressOfOperand, bool & NotCastExpr, clang::Parser::TypeCastState isTypeCast) Line 1296	C++
+ 	clang.exe!clang::Parser::ParseCastExpression(bool isUnaryExpression, bool isAddressOfOperand, clang::Parser::TypeCastState isTypeCast) Line 441	C++
+ 	clang.exe!clang::Parser::ParseAssignmentExpression(clang::Parser::TypeCastState isTypeCast) Line 170	C++
+ 	clang.exe!clang::Parser::ParseExpression(clang::Parser::TypeCastState isTypeCast) Line 122	C++
+ 	clang.exe!clang::Parser::ParseExprStatement() Line 385	C++
+ 	clang.exe!clang::Parser::ParseStatementOrDeclarationAfterAttributes(llvm::SmallVector<clang::Stmt *,32> & Stmts, bool OnlyStatement, clang::SourceLocation * TrailingElseLoc, clang::Parser::ParsedAttributesWithRange & Attrs) Line 220	C++
+ 	clang.exe!clang::Parser::ParseStatementOrDeclaration(llvm::SmallVector<clang::Stmt *,32> & Stmts, bool OnlyStatement, clang::SourceLocation * TrailingElseLoc) Line 110	C++
+ 	clang.exe!clang::Parser::ParseCompoundStatementBody(bool isStmtExpr) Line 958	C++
+ 	clang.exe!clang::Parser::ParseFunctionStatementBody(clang::Decl * Decl, clang::Parser::ParseScope & BodyScope) Line 1876	C++
+ 	clang.exe!clang::Parser::ParseFunctionDefinition(clang::ParsingDeclarator & D, const clang::Parser::ParsedTemplateInfo & TemplateInfo, clang::Parser::LateParsedAttrList * LateParsedAttrs) Line 1104	C++
+ 	clang.exe!clang::Parser::ParseDeclGroup(clang::ParsingDeclSpec & DS, unsigned int Context, clang::SourceLocation * DeclEnd, clang::Parser::ForRangeInit * FRI) Line 1689	C++
+ 	clang.exe!clang::Parser::ParseDeclOrFunctionDefInternal(clang::Parser::ParsedAttributesWithRange & attrs, clang::ParsingDeclSpec & DS, clang::AccessSpecifier AS) Line 893	C++
+ 	clang.exe!clang::Parser::ParseDeclarationOrFunctionDefinition(clang::Parser::ParsedAttributesWithRange & attrs, clang::ParsingDeclSpec * DS, clang::AccessSpecifier AS) Line 909	C++
+ 	clang.exe!clang::Parser::ParseExternalDeclaration(clang::Parser::ParsedAttributesWithRange & attrs, clang::ParsingDeclSpec * DS) Line 767	C++
+ 	clang.exe!clang::Parser::ParseTopLevelDecl(clang::OpaquePtr<clang::DeclGroupRef> & Result) Line 569	C++
+ 	clang.exe!clang::ParseAST(clang::Sema & S, bool PrintStats, bool SkipFunctionBodies) Line 144	C++
+
+to the source location taken in consideration.
